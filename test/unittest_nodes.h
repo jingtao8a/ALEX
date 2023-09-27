@@ -555,4 +555,4 @@ TEST_CASE("TestComputeCostWithSample") {
   CHECK_LT(rel_diff_in_search_entropy, 0.5);
   CHECK_LT(rel_diff_in_shifts_entropy, 0.5);
 }
-};
+}

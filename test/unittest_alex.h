@@ -522,4 +522,4 @@ TEST_CASE("TestRangeScan") {
   CHECK_EQ(results2.size(), 90);
   CHECK_EQ(sum2, 4905);
 }
-};
+}
