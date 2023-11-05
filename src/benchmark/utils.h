@@ -2,6 +2,8 @@
 // Licensed under the MIT license.
 
 #include "zipf.h"
+#include <map>
+
 
 template <class T>
 bool load_binary_data(T data[], int length, const std::string& file_path) {
@@ -53,3 +55,5 @@ T* get_search_keys_zipf(T array[], int num_keys, int num_searches) {
   }
   return keys;
 }
+
+

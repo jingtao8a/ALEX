@@ -17,13 +17,16 @@ else()
     set(CMAKE_CXX_FLAGS "-O3 -march=native -Wall -Wextra")
 endif()
 
-
+include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/doctest)
 include_directories(src/core)
 
 add_executable(example src/examples/main.cpp)
 add_executable(benchmark src/benchmark/main.cpp)
 add_executable(benchmark_b_plus src/benchmark/main_b_plus.cpp)
+add_executable(benchmark_json src/benchmark/main_json.cpp)
+add_executable(benchmark_json_b_plus src/benchmark/main_json_b_plus.cpp)
+
 # set(DOCTEST_DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/doctest)
 # file(DOWNLOAD
 #     https://raw.githubusercontent.com/onqtam/doctest/2.4.6/doctest/doctest.h

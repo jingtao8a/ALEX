@@ -1,44 +1,41 @@
-//
-// Created by 19210 on 2023/11/4.
-//
-
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
-/*
- * Simple benchmark that runs a mixture of point lookups and inserts on ALEX.
- */
 
 #include "../core/alex.h"
-#include "../stx/btree.h"
-
-#include <iomanip>
 
 #include "flags.h"
 #include "utils.h"
 
+#include "includes/rapidjson/document.h"
+#include "includes/rapidjson/filereadstream.h"
+#include <iomanip>
+#include <map>
+#include <iostream>
 
 // Modify these if running your own workload
-#define KEY_TYPE uint64_t
+#define KEY_TYPE double
 #define PAYLOAD_TYPE double
 
-/*
- * Required flags:
- * --keys_file              path to the file that contains keys
- * --keys_file_type         file type of keys_file (options: binary or text)
- * --init_num_keys          number of keys to bulk load with
- * --total_num_keys         total number of keys in the keys file
- * --batch_size             number of operations (lookup or insert) per batch
- *
- * Optional flags:
- * --insert_frac            fraction of operations that are inserts (instead of
- * lookups)
- * --lookup_distribution    lookup keys distribution (options: uniform or zipf)
- * --time_limit             time limit, in minutes
- * --print_batch_stats      whether to output stats for each batch
- */
 
-int main(int argc, char* argv[]) {
+std::pair<std::vector<std::pair<double, double> >, std::vector<double> > read_data_map_from_json() {
+    std::vector<std::pair<double, double> > result;
+    std::vector<double> keys;
+    FILE* fp = fopen("D:/data/data-from-beijing.json", "r");
+    char readBuffer[65536];
+    rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+
+    rapidjson::Document d;
+    d.ParseStream(is);
+
+    for (rapidjson::Value::ConstMemberIterator iter = d.MemberBegin();
+         iter != d.MemberEnd(); ++iter) {
+        double lng = std::stod(iter->name.GetString());
+        double lat = iter->value.GetDouble();
+        result.emplace_back(lng, lat);
+        keys.push_back(lng);
+    }
+    return {result, keys};
+}
+
+int main(int argc, char** argv) {
     auto flags = parse_flags(argc, argv);
     std::string keys_file_path = get_required(flags, "keys_file");
     std::string keys_file_type = get_required(flags, "keys_file_type");
@@ -51,31 +48,26 @@ int main(int argc, char* argv[]) {
     auto time_limit = stod(get_with_default(flags, "time_limit", "0.5"));
     bool print_batch_stats = get_boolean_flag(flags, "print_batch_stats");
 
-    // Read keys from file
+    auto res = read_data_map_from_json();
+    auto dataArray = res.first;
+    auto keysArray = res.second;
     auto keys = new KEY_TYPE[total_num_keys];
-    if (keys_file_type == "binary") {
-        load_binary_data(keys, total_num_keys, keys_file_path);
-    } else if (keys_file_type == "text") {
-        load_text_data(keys, total_num_keys, keys_file_path);
-    } else {
-        std::cerr << "--keys_file_type must be either 'binary' or 'text'"
-                  << std::endl;
-        return 1;
+    for (int i = 0; i < total_num_keys; ++i) {
+        keys[i] = keysArray[i];
     }
-
     // Combine bulk loaded keys with randomly generated payloads
     auto values = new std::pair<KEY_TYPE, PAYLOAD_TYPE>[init_num_keys];
-    std::mt19937_64 gen_payload(std::random_device{}());
+
     for (int i = 0; i < init_num_keys; i++) {
-        values[i].first = keys[i];
-        values[i].second = static_cast<PAYLOAD_TYPE>(gen_payload());
+        values[i].first = dataArray[i].first;
+        values[i].second = dataArray[i].second;
     }
 
-    //Create b_plus_tree and bulk load
-    stx::btree<KEY_TYPE, PAYLOAD_TYPE> btree;
-    for (int i = 0; i < init_num_keys; ++i) {
-        btree.insert2(values[i].first, values[i].second);
-    }
+    // Create ALEX and bulk load
+    alex::Alex<KEY_TYPE, PAYLOAD_TYPE> index;
+    std::sort(values, values + init_num_keys,
+              [](auto const& a, auto const& b) { return a.first < b.first; });
+    index.bulk_load(values, init_num_keys);
 
     // Run workload
     int i = init_num_keys;
@@ -110,9 +102,9 @@ int main(int argc, char* argv[]) {
             auto lookups_start_time = std::chrono::high_resolution_clock::now();
             for (int j = 0; j < num_lookups_per_batch; j++) {
                 KEY_TYPE key = lookup_keys[j];
-                PAYLOAD_TYPE payload = btree.find(key).data();
+                PAYLOAD_TYPE* payload = index.get_payload(key);
                 if (payload) {
-                    sum += payload;
+                    sum += *payload;
                 }
             }
             auto lookups_end_time = std::chrono::high_resolution_clock::now();
@@ -130,7 +122,7 @@ int main(int argc, char* argv[]) {
         int num_keys_after_batch = i + num_actual_inserts;
         auto inserts_start_time = std::chrono::high_resolution_clock::now();
         for (; i < num_keys_after_batch; i++) {
-            btree.insert2(keys[i], static_cast<PAYLOAD_TYPE>(gen_payload()));
+            index.insert(keys[i], dataArray[i].second);
         }
         auto inserts_end_time = std::chrono::high_resolution_clock::now();
         double batch_insert_time =
@@ -192,4 +184,3 @@ int main(int argc, char* argv[]) {
     delete[] keys;
     delete[] values;
 }
-
