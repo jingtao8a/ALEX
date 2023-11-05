@@ -160,20 +160,20 @@ struct AlexCompare {
 
 // Extract the rightmost 1 in the binary representation.
 // e.g. extract_rightmost_one(010100100) = 000000100
-inline uint64_t extract_rightmost_one(uint64_t value) {
+inline uint64_t extract_rightmost_one(uint64_t value) {//留下最右边出现的第一个1
   return value & -static_cast<int64_t>(value);
 }
 
 // Remove the rightmost 1 in the binary representation.
 // e.g. remove_rightmost_one(010100100) = 010100000
-inline uint64_t remove_rightmost_one(uint64_t value) {
+inline uint64_t remove_rightmost_one(uint64_t value) {//去掉右边第一个出现的1
   return value & (value - 1);
 }
 
 // Count the number of 1s in the binary representation.
 // e.g. count_ones(010100100) = 3
 inline int count_ones(uint64_t value) {
-  return static_cast<int>(_mm_popcnt_u64(value));
+  return static_cast<int>(_mm_popcnt_u64(value));//计算1的个数
 }
 
 // Get the offset of a bit in a bitmap.
@@ -346,7 +346,7 @@ class ExpectedIterationsAndShiftsAccumulator : public StatAccumulator {
 /*** Miscellaneous helpers ***/
 
 // https://stackoverflow.com/questions/364985/algorithm-for-finding-the-smallest-power-of-two-thats-greater-or-equal-to-a-giv
-inline int pow_2_round_up(int x) {
+inline int pow_2_round_up(int x) {//获取一个大于等于给定值的最小2次幂
   --x;
   x |= x >> 1;
   x |= x >> 2;
@@ -357,7 +357,7 @@ inline int pow_2_round_up(int x) {
 }
 
 // https://stackoverflow.com/questions/994593/how-to-do-an-integer-log2-in-c
-inline int log_2_round_down(int x) {
+inline int log_2_round_down(int x) {//log2(x)
   int res = 0;
   while (x >>= 1) ++res;
   return res;

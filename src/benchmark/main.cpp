@@ -11,9 +11,10 @@
 
 #include "flags.h"
 #include "utils.h"
+#include <cstdint>
 
 // Modify these if running your own workload
-#define KEY_TYPE double
+#define KEY_TYPE uint64_t
 #define PAYLOAD_TYPE double
 
 /*

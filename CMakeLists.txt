@@ -23,7 +23,7 @@ include_directories(src/core)
 
 add_executable(example src/examples/main.cpp)
 add_executable(benchmark src/benchmark/main.cpp)
-
+add_executable(benchmark_b_plus src/benchmark/main_b_plus.cpp)
 # set(DOCTEST_DOWNLOAD_DIR ${CMAKE_CURRENT_BINARY_DIR}/doctest)
 # file(DOWNLOAD
 #     https://raw.githubusercontent.com/onqtam/doctest/2.4.6/doctest/doctest.h
@@ -33,6 +33,9 @@ add_executable(benchmark src/benchmark/main.cpp)
 
 add_executable(test_alex test/unittest_main.cpp)
 # target_include_directories(test_alex PRIVATE ${DOCTEST_DOWNLOAD_DIR})
+add_executable(test1 mytest/test1.cpp)
 
 enable_testing()
 add_test(test_alex test_alex)
+add_test(test1 test1)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
