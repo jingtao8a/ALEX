@@ -14,7 +14,7 @@
 #include <cstdint>
 
 // Modify these if running your own workload
-#define KEY_TYPE uint64_t
+#define KEY_TYPE double
 #define PAYLOAD_TYPE double
 
 /*
